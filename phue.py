@@ -30,8 +30,7 @@ else:
     import httplib
 
 import logging
-logger = logging.getLogger('phue')
-
+logger = logging.getLogger(__name__)
 
 if platform.system() == 'Windows':
     USER_HOME = 'USERPROFILE'
@@ -302,16 +301,15 @@ class Group(Light):
             self.group_id = int(group_id)
         except:
             name = group_id
+
+            if not PY3K:
+                name = unicode(name, encoding='utf-8')
+
             groups = bridge.get_group()
             for idnumber, info in groups.items():
-                if PY3K:
-                    if info['name'] == name:
-                        self.group_id = int(idnumber)
-                        break
-                else:
-                    if info['name'] == unicode(name, encoding='utf-8'):
-                        self.group_id = int(idnumber)
-                        break  
+                if info['name'] == name:
+                    self.group_id = int(idnumber)
+                    break
             else:
                 raise LookupError("Could not find a group by that name.")
 
@@ -466,12 +464,15 @@ class Bridge(object):
 
         result = connection.getresponse()
         connection.close()
+
+        result_str = result.read()
+
         if PY3K:
-            return json.loads(str(result.read(), encoding='utf-8'))
-        else:
-            result_str = result.read()
-            logger.debug(result_str)
-            return json.loads(result_str)
+            result_str = str(result_str, encoding='utf-8')
+
+        logger.debug(result_str)
+
+        return json.loads(result_str)
 
     def get_ip_address(self, set_result=False):
 
@@ -484,11 +485,12 @@ class Bridge(object):
 
         result = connection.getresponse()
 
+        result_str = result.read()
+
         if PY3K:
-            data = json.loads(str(result.read(), encoding='utf-8'))
-        else:
-            result_str = result.read()
-            data = json.loads(result_str)
+            result_str = str(result_str, encoding='utf-8')
+
+        data = json.loads(result_str)
 
         """ close connection after read() is done, to prevent issues with read() """
 
@@ -558,14 +560,14 @@ class Bridge(object):
 
     def get_light_id_by_name(self, name):
         """ Lookup a light id based on string name. Case-sensitive. """
+        if not PY3K:
+            name = unicode(name, encoding='utf-8')
+
         lights = self.get_light()
         for light_id in lights:
-            if PY3K:
-                if name == lights[light_id]['name']:
-                    return light_id
-            else:
-                if unicode(name, encoding='utf-8') == lights[light_id]['name']:
-                    return light_id
+            if name == lights[light_id]['name']:
+                return light_id
+
         return False
 
     def get_light_objects(self, mode='list'):
@@ -595,10 +597,10 @@ class Bridge(object):
             return self.lights_by_id[key]
         except:
             try:
-                if PY3K:
-                    return self.lights_by_name[key]
-                else:
-                    return self.lights_by_name[unicode(key, encoding='utf-8')]
+                if not PY3K:
+                    key = unicode(key, encoding='utf-8')
+
+                return self.lights_by_name[key]
             except:
                 raise KeyError(
                     'Not a valid key (integer index starting with 1, or light name): ' + str(key))
@@ -695,14 +697,13 @@ class Bridge(object):
 
     def get_group_id_by_name(self, name):
         """ Lookup a group id based on string name. Case-sensitive. """
+        if not PY3K:
+            name = unicode(name, encoding='utf-8')
+
         groups = self.get_group()
         for group_id in groups:
-            if PY3K:
-                if name == groups[group_id]['name']:
-                    return group_id
-            else:
-                if unicode(name, encoding='utf-8') == groups[group_id]['name']:
-                    return group_id
+            if name == groups[group_id]['name']:
+                return group_id
         return False
 
     def get_group(self, group_id=None, parameter=None):
