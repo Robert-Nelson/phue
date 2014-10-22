@@ -10,5 +10,5 @@ setup(name='phue',
       license='WTFPL',
       description='A Philips Hue Python library',
       long_description='A Philips Hue Python library',
-      py_modules=['phue'],
-      )
+      py_modules=['phue']
+)
