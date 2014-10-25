@@ -474,11 +474,12 @@ class Bridge(object):
 
         return json.loads(result_str)
 
-    def get_ip_address(self, set_result=False):
+    @staticmethod
+    def get_ip_address():
 
         """ Get the bridge ip address from the meethue.com nupnp api """
 
-        connection = httplib.HTTPConnection('www.meethue.com')
+        connection = httplib.HTTPSConnection('www.meethue.com')
         connection.request('GET', '/api/nupnp')
 
         logger.info('Connecting to meethue.com/api/nupnp')
@@ -499,9 +500,6 @@ class Bridge(object):
         ip = str(data[0]['internalipaddress'])
 
         if ip is not '':
-            if set_result:
-                self.ip = ip
-
             return ip
         else:
             return False
